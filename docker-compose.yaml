@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    environment:
+      POSTGRES_DB: delivery-service-psql
+      POSTGRES_USER: ds_user
+      POSTGRES_PASSWORD: ds_password
+    networks:
+      - pg-network
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    networks:
+      - pg-network
+    ports:
+      - "5050:80"
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "6379:6379"
+
+  app:
+    image: delivery-service:latest
+    container_name: app
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/delivery-service-db
+      SPRING_DATASOURCE_USERNAME: ds_user
+      SPRING_DATASOURCE_PASSWORD: ds_password
+      SPRING_REDIS_HOST: redis
+    ports:
+      - "8080:8080"
+    networks:
+      - pg-network
+      - default
+
+networks:
+  postgres_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
